@@ -1,35 +1,15 @@
 let express     = require('express'),
     app         = express(),
     bodyParser  = require('body-parser'),
-    mongoose    = require("mongoose");
+    mongoose    = require("mongoose"),
+    Campground  = require("./models/campground"),
+    Comment     = require("./models/comment"),
+    seedDb      = require("./seeds")
 
+seedDb();    
 mongoose.connect("mongodb://localhost/yelpcamp", {useNewUrlParser: true});
-app.set("view engine", "ejs"); // to remove ejs extension from res.render
 app.use(bodyParser.urlencoded({extended:true}));
-
-//SCHEMA SETUP
-let campgroundSchema = new mongoose.Schema({
-  name: String,
-  image: String,
-  description: String 
-});
-
-let Campground = mongoose.model("Campground", campgroundSchema);
-
-// Campground.create({
-//     name: "Batcave",
-//     image: "https://i.pinimg.com/originals/8a/49/1f/8a491fdd64f3f479a0b7576e1ba94b94.jpg",
-//     description: "This is the batcave, Batman's secret hideout, only few know of it's existence"
-
-// }, 
-// function(err, campground){
-//   if(err){
-//     console.log(err);
-//   } else {
-//     console.log("NEWLY CREATED CAMPGROUND");
-//     console.log(campground)
-//   }
-// });
+app.set("view engine", "ejs"); // to remove ejs extension from res.render
 
 let campgrounds = [
   {name: "Star Labs", image: "https://vignette.wikia.nocookie.net/dccu/images/a/a4/S.T.A.R._Labs_-_Desk_of_Silas_Stone.jpg/revision/latest?cb=20180322215627"},
@@ -80,13 +60,15 @@ app.post("/campgrounds", (req,res)=>{
   });
 
 });
+
 //SHOW - Shows more info about one campground
 app.get("/campgrounds/:id", (req,res)=>{
   //find the campgroun qith provided id 
-  Campground.findById(req.params.id, function(err, foundCampground){
+  Campground.findById(req.params.id).populate("comments").exec(function(err, foundCampground){
     if(err){
       console.log(err)
     } else {
+      console.log(foundCampground);
         //render show template with that campground
       res.render("show", {campground: foundCampground});
     }
