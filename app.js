@@ -29,7 +29,7 @@ app.get("/campgrounds", (req, res)=>{
     if(err){
       console.log(err)
     }else{
-      res.render("index", {campgrounds: allCampgrounds});
+      res.render("campgrounds/index", {campgrounds: allCampgrounds});
     }
   })
   // res.render("campgrounds", {campgrounds: campgrounds}); //name: data passing in 
@@ -37,7 +37,7 @@ app.get("/campgrounds", (req, res)=>{
 
 //NEW - Show form to create new campground
 app.get("/campgrounds/new", (req, res)=>{
-  res.render("new");
+  res.render("campgrounds/new");
 })
 
 // CREATE ROUTE - Add new campground to database
@@ -70,10 +70,52 @@ app.get("/campgrounds/:id", (req,res)=>{
     } else {
       console.log(foundCampground);
         //render show template with that campground
-      res.render("show", {campground: foundCampground});
+      res.render("campgrounds/show", {campground: foundCampground});
     }
   });
-})
+});
+
+// ======================
+// COMMENTS ROUTE
+// ======================
+
+
+app.get("/campgrounds/:id/comments/new", (req, res)=>{
+  Campground.findById(req.params.id, (err, campground)=>{
+    if(err){
+      console.log(err);
+    }
+    else{
+      res.render("comments/new", {campground: campground});
+    }
+  })
+
+});
+
+app.post("/campgrounds/:id/comments", (req, res)=>{
+  //lookup campground using ID
+  Campground.findById(req.params.id, (err, campground)=>{
+    if(err){
+      console.log(err);
+      res.redirect("/campgrounds");
+    } else {
+    //Create new comment
+    Comment.create(req.body.comment, (err, comment)=>{
+      if(err){
+        console.log(err);
+      } else {
+        //connect new comment to campground
+        campground.comments.push(comment);
+        campground.save();
+        //redirect campground show page
+        res.redirect("/campgrounds/" + campground._id);
+      }
+    });
+    }
+  });
+
+});
+
 
 app.listen(3000 ,process.env.IP, ()=>{
   console.log("The server is running...");
